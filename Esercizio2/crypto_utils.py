@@ -63,7 +63,7 @@ def read_file(
                 data = in_file.read()
             return process(data), in_filename
         except (IOError, ReadProcessingError) as e:
-            print(f'Error while reading {subject}:\n'+str(e))
+            print(f'Error while reading {subject}:\n{e}')
             #let user abort reading file
             c = input('q to quit, anything else to try again: ')
             if c.lower() == 'q':

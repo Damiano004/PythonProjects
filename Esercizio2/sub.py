@@ -1,6 +1,6 @@
 # --SUBSTITUTION CIPHER--
-from soluzioni.crypto_utils import LibCryptoError, ReadProcessingError, KeyImportError
-from soluzioni.crypto_utils import read_file, write_file
+from crypto_utils import LibCryptoError, ReadProcessingError, KeyImportError
+from crypto_utils import read_file, write_file
 
 
 # normal reference alphabet
@@ -36,7 +36,7 @@ def substitute(in_str: str, ref_alph: str, perm_alph: str) -> str:
         if index < 0:
             # character not found, raise error
             err_str = f'Error: message contains an invalid character: "{char}"'
-            raise KeyImportError(err_str)
+            raise LibCryptoError(err_str)
         # append to output the corresponding character in the permuted alphabet
         out_str += perm_alph[index]
     # return final string
@@ -62,7 +62,7 @@ def check_key(key: str) -> None:
     # check lengths
     if len(key) != len(ALPH):
         err_str += 'do not have the same length'
-        raise LibCryptoError(err_str)
+        raise KeyImportError(err_str)
     # check that every character of ALPH is present in key
     err_str += 'do not contain the same characters'
     for char in ALPH:
@@ -111,6 +111,7 @@ def import_key(raw_data: bytes) -> str:
          check_key(key)
     except KeyImportError as e:
          raise ReadProcessingError(str(e))
+    return key
 
 def encrypt():
     '''
@@ -138,12 +139,12 @@ def encrypt():
          default = 'plaintext.txt',
          process = lambda raw: import_trimmed_string(raw)
     )
-    print('The plaintext is:\n', ct)
+    print('The plaintext is:\n', pt)
     # encrypt
     ct = substitute(pt, ALPH, key)
     # write ciphertext on file
     out_filename = write_file(
-         data = pt.encode('utf-8'),
+         data = ct.encode('utf-8'),
          subject = 'decrypted text',
          error = 'User aborted writing the output',
          default = f'ciphertext.txt'
