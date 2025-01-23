@@ -19,45 +19,62 @@ def isCharacter(in_char: str) -> bool:
      if ord(in_char)<97 | ord(in_char)>122:
           return False
      return True
+
+def getLetterNumber(letter:int) -> tuple[int , int]:
+     '''
+     Funcion that returns the number of the letter in an alphabetical
+     order(from 0 to 25 where 0 is a and 25 if z)
+     This also returns an offset to indicate whether the letter is capital
+     or lower.
+
+     ### Parameters
+     - letter: the ascii code of the character whose number will be returned
+
+     ### Returns
+     - Integer: the number of the letter [0-25]
+     - Offset: an offset that determines if the letter is capital (65) or lower (97)
+     '''
+     #Check if the letter is capital or lower
+     if letter-65 <=25:
+          return letter-65, 65
+     return letter-97, 97
      
-def sumLetter(letter_a: str, letter_b:str) -> str:
+def sumLetter(letter_a: str, letter_b:str, multiplier: int) -> str:
      '''
      Function that adds the two letters and returns the
-     resulting letter, (letter_a + letter_b)
+     resulting letter, (letter_a + letter_b * multiplier)
 
      ### Parameters
      - letter_a: the letter that gets summed by letter_b
      - letter_b: the letter that summs letter_a
+     - multiplier: a number applied to letter_b to enable a dual funcionality
 
      ### Returns
      A letter that is the result between the sum of letter_a and letter_b
      '''
+     #Retrive ascii code of the letters
      ascii_a = ord(letter_a)
      ascii_b = ord(letter_b)
+     #Initialize an offset used to remember if the letter is capital or not
      offset = 0
-     if ascii_a-65 <=25:
-          offset = 65
-     else:
-        offset = 97
-     if ascii_b-65 <=25:
-          ascii_b -= 65
-     else:
-        ascii_b -= 97
-     ascii_a -= offset
-     ascii_a = (ascii_a + ascii_b) % 26
+     #Retrive the correct number of the letter
+     ascii_a, offset = getLetterNumber(ascii_a)
+     ascii_b, _ = getLetterNumber(ascii_b)
+     #Summs the two letters to encrypt letter_a
+     ascii_a = (ascii_a + ascii_b * multiplier) % 26
+     #Adds the offset to ascii_a to make it capital or lower
      ascii_a += offset
+     #Returns the retulting letter
      return chr(ascii_a)
-               
-          
 
-
-def substitute(in_str: str, key: str) -> str:
+def substitute(in_str: str, key: str, mode: bool) -> str:
     '''
     Function that performs the core substitution operation.
     
     ### Parameters
     - in_str: is the string whose characters will be substituted
     - key: is the key that will be used to encrypt the plain text
+    - mode: a boolean that dictates if it should encrypt (true) or decrypt (false)
     
     ### Returns
     A string containint the encrypted message.
@@ -68,6 +85,9 @@ def substitute(in_str: str, key: str) -> str:
     that are not alphabetical characters.
     '''
     # initialize output
+    multiplier = -1
+    if(mode):
+         multiplier = 1
     out_str = ''
     i = 0
     # substitute every character
@@ -78,7 +98,7 @@ def substitute(in_str: str, key: str) -> str:
             err_str = f'Error: message contains an invalid character: "{char}"'
             raise LibCryptoError(err_str)
         # append to output the corresponding character in the permuted alphabet
-        out_str += sumLetter(char, key[i])
+        out_str += sumLetter(char, key[i], multiplier)
         i += 1
     # return final string
     return out_str
@@ -99,16 +119,14 @@ def check_key(key: str, pt:str) -> None:
     ## Raises
     KeyImportError if key has not the same length as the pt.
     '''
-    # initialize error string, will be completed
-    err_str = 'Error: key and plain text '
     # check lengths
-    if len(key) != len(pt):
-        err_str += 'do not have the same length'
+    if len(key) < len(pt):
+        err_str = 'Error: the key is smaller than the plain text'
         raise KeyImportError(err_str)
-    # check that every character of ALPH is present in key
-    err_str = 'Error: should only contain alphabetical letters'
+    # check that the key only contains letters
     for char in key:
-        if isCharacter(char):
+        if not isCharacter(char):
+            err_str = 'Error: should only contain alphabetical letters'
             raise KeyImportError(err_str)
 
 
@@ -179,7 +197,7 @@ def encrypt():
     #check_key(key)
     print('The plaintext is:\n', pt)
     # encrypt
-    ct = substitute(pt, key)
+    ct = substitute(pt, key, True)
     # write ciphertext on file
     out_filename = write_file(
          data = ct.encode('utf-8'),
@@ -214,7 +232,7 @@ def decrypt():
     )
     print('The ciphertext is:\n', ct)
     # decrypt (inverting alph and key)
-    pt = substitute(ct, key)
+    pt = substitute(ct, key, False)
     # write result
     print('The decrypted message is:\n', pt)
     out_filename = write_file(
@@ -249,4 +267,3 @@ while True:
             print('Invalid choice, please try again!')
     except LibCryptoError as e:
             print(e)
-
