@@ -84,7 +84,7 @@ def substitute(in_str: str, key: str, mode: bool) -> str:
     LibCryptoError if in_str contains characters
     that are not alphabetical characters.
     '''
-    # initialize output
+    # initialize multiplier
     multiplier = -1
     if(mode):
          multiplier = 1
@@ -92,6 +92,9 @@ def substitute(in_str: str, key: str, mode: bool) -> str:
     i = 0
     # substitute every character
     for char in in_str:
+        #If it's a space, keep it
+        if(char == " "):
+             out_str+=" "
         # find position in reference alphabet
         if not isCharacter(char):
             # character not found, raise error
@@ -193,8 +196,8 @@ def encrypt():
          default = 'plaintext.txt',
          process = lambda raw: import_trimmed_string(raw)
     )
-    # check validity
-    #check_key(key)
+    # check key validity
+    check_key(key, pt)
     print('The plaintext is:\n', pt)
     # encrypt
     ct = substitute(pt, key, True)
@@ -230,6 +233,8 @@ def decrypt():
          default = 'ciphertext.txt',
          process = lambda raw: import_trimmed_string(raw)
     )
+    # check key validity
+    check_key(key, pt)
     print('The ciphertext is:\n', ct)
     # decrypt (inverting alph and key)
     pt = substitute(ct, key, False)
