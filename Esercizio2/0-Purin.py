@@ -2,23 +2,24 @@
 from crypto_utils import LibCryptoError, ReadProcessingError, KeyImportError
 from crypto_utils import read_file, write_file
 
-def isCharacter(in_char: str) -> bool:
+ALPHABET = "1234567890$%()=+|-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .;:_<>#,!?@'ÉÈÀÒÌÙèàùòìé"
+
+def checkStringValidity(in_string: str) -> None:
      '''
-     Function that returns whether an input string
-     is an alphabetical letter or not
+     Function that checks if an input string is in the reference alphabet
 
      ### Parameters
-     - in_char: is the character that the function will check
+     - in_string: is the string that the function will check
 
-     ### Returns
-     A boolean value where:
-     - True -> the input is an alphabetical letter
-     - False -> the input is not an alphabetical letter
+     ---
+     ## Raises
+     A KeyImportError if the string contains a character that is not
+     in the reference alphabet
      '''
-     in_char = in_char.lower()
-     if ord(in_char)<97 | ord(in_char)>122:
-          return False
-     return True
+     for char in in_string:
+        if ALPHABET.find(char) < 0:
+            err_str = f'Character not found in the reference alphabet {char}'
+            raise KeyImportError(err_str)
 
 def getLetterNumber(letter:int) -> tuple[int , int]:
      '''
@@ -52,20 +53,13 @@ def sumLetter(letter_a: str, letter_b:str, multiplier: int) -> str:
      ### Returns
      A letter that is the result between the sum of letter_a and letter_b
      '''
-     #Retrive ascii code of the letters
-     ascii_a = ord(letter_a)
-     ascii_b = ord(letter_b)
-     #Initialize an offset used to remember if the letter is capital or not
-     offset = 0
-     #Retrive the correct number of the letter
-     ascii_a, offset = getLetterNumber(ascii_a)
-     ascii_b, _ = getLetterNumber(ascii_b)
-     #Summs the two letters to encrypt letter_a
-     ascii_a = (ascii_a + ascii_b * multiplier) % 26
-     #Adds the offset to ascii_a to make it capital or lower
-     ascii_a += offset
-     #Returns the retulting letter
-     return chr(ascii_a)
+     # retrive positions in the alphabet
+     pos_a = ALPHABET.find(letter_a)
+     pos_b = ALPHABET.find(letter_b)
+     # sum the positions
+     sum = (pos_a + pos_b * multiplier) % len(ALPHABET)
+     # return the resulting letter
+     return ALPHABET[sum]
 
 def substitute(in_str: str, key: str, mode: bool) -> str:
     '''
@@ -84,36 +78,31 @@ def substitute(in_str: str, key: str, mode: bool) -> str:
     LibCryptoError if in_str contains characters
     that are not alphabetical characters.
     '''
+    # check validity of input string
+    checkStringValidity(in_str)
     # initialize multiplier
     multiplier = -1
     if(mode):
          multiplier = 1
+    # initialize output string
     out_str = ''
     i = 0
     # substitute every character
     for char in in_str:
-        #If it's a space, keep it
-        if(char == " "):
-             out_str+=" "
-        # find position in reference alphabet
-        if not isCharacter(char):
-            # character not found, raise error
-            err_str = f'Error: message contains an invalid character: "{char}"'
-            raise LibCryptoError(err_str)
         # append to output the corresponding character in the permuted alphabet
         out_str += sumLetter(char, key[i], multiplier)
         i += 1
     # return final string
     return out_str
 
-def check_key(key: str, pt:str) -> None:
+def check_key(key: str, rt:str) -> None:
     '''
     Function that checks the validity of a key, i.e. if it has the
     same length as the plain text.
     
     ### Parameters
     - key: string representing the key used for encrypt the message
-    - pt: string representing the plain text
+    - rt: string representing the referenced text
     
     ### Returns
     Nothing if the key is valid.
@@ -122,16 +111,12 @@ def check_key(key: str, pt:str) -> None:
     ## Raises
     KeyImportError if key has not the same length as the pt.
     '''
+    # check key validity
+    checkStringValidity(key)
     # check lengths
-    if len(key) < len(pt):
-        err_str = 'Error: the key is smaller than the plain text'
+    if len(key) < len(rt):
+        err_str = 'Error: the key is smaller than the referenced text'
         raise KeyImportError(err_str)
-    # check that the key only contains letters
-    for char in key:
-        if not isCharacter(char):
-            err_str = 'Error: should only contain alphabetical letters'
-            raise KeyImportError(err_str)
-
 
 def import_trimmed_string(raw_data: bytes) -> str:
     '''
@@ -234,7 +219,7 @@ def decrypt():
          process = lambda raw: import_trimmed_string(raw)
     )
     # check key validity
-    check_key(key, pt)
+    check_key(key, ct)
     print('The ciphertext is:\n', ct)
     # decrypt (inverting alph and key)
     pt = substitute(ct, key, False)
