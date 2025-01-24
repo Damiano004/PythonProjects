@@ -1,8 +1,10 @@
 # --SUBSTITUTION CIPHER--
 from crypto_utils import LibCryptoError, ReadProcessingError, KeyImportError
 from crypto_utils import read_file, write_file
-
-ALPHABET = "1234567890$%()=+|-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .;:_<>#,!?@'ÉÈÀÒÌÙèàùòìé"
+# Variable that contains the  new line components (CRLF)
+CRLF = f'{chr(10)}{chr(13)}'
+# Variable that contains all the characters that are valid for the encryption
+ALPHABET = f"1234567890$%()=+|-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .;:_<>#,!?@'ÉÈÀÒÌÙèàùòìé{CRLF}"
 
 def checkStringValidity(in_string: str) -> None:
      '''
