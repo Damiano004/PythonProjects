@@ -5,6 +5,7 @@ from Crypto.Cipher import AES, ChaCha20
 from Crypto.Random import get_random_bytes
 import base64
 
+AES_NONCE_LENGTH = 11
 CHACHA20_NONCE_LENGTH = 12
 
 def stirng_to_base64(string: bytes) -> bytes:
@@ -54,13 +55,21 @@ def encrypt():
     Function that performs the encryption, reding the plaintext from file,
     generating a random key and nonce and writing the result on file.
     '''
+    #ask the user for a plain text
+    pt, _ = read_file(
+         subject = 'plaintext',
+         error = 'User aborted reading the plaintext',
+         default = 'text\plaintext.txt.txt',
+         process = lambda raw: raw
+    )
+
     #make the user decide whether to use or not the authentication
     prompt = "Would you like to authenticate the message? (y/n)"
     while True:
         choice = input(prompt)
         match choice.lower():
             case 'y':
-                print()
+                print('this function is not implemented yet')
             case 'n':
                 #continue normally
                 break
@@ -73,15 +82,9 @@ def encrypt():
     key = get_random_bytes(32)
     nonce = get_random_bytes(CHACHA20_NONCE_LENGTH)
 
-    #ask the user for a plain text
-    pt, _ = read_file(
-         subject = 'plaintext',
-         error = 'User aborted reading the plaintext',
-         default = 'plaintext.txt',
-         process = lambda raw: raw
-    )
     
-    #encryption
+    
+    #initialize the ChaCha20 cifer
     cipher = ChaCha20.new(key=key, nonce=nonce)
     ct = cipher.encrypt(pt)
 
@@ -90,21 +93,32 @@ def encrypt():
          data = byte_to_base64(key),
          subject = 'key value',
          error = 'User aborted writing the output',
-         default = f'key.txt'
+         default = '/key.txt'
     )
-    _ = write_file(
-         data = byte_to_base64(nonce),
-         subject = 'nonce value',
-         error = 'User aborted writing the output',
-         default = f'nonce.txt'
-    )
+
     out_filename = write_file(
-         data = byte_to_base64(ct),
+         data = byte_to_base64(nonce+ct),
          subject = 'decrypted text',
          error = 'User aborted writing the output',
-         default = f'ciphertext.txt'
+         default = 'ciphertext.txt'
     )
     print(f'Written files:\nCT: {out_filename}\nKey: {key_file}\n')
+
+def encrypt_normal(input_text: str)-> tuple[str,str]:
+    return ""
+
+def encrypt_autentication(input_text: str)-> tuple[str,str]:
+    #cipher with authentication uses AES with CCM mode
+    #generate a random key and nonce
+    key = get_random_bytes(16)
+    nonce = get_random_bytes(AES_NONCE_LENGTH)
+    #initialize the AES_CCM cifer
+    cipher = AES.new(key=key, nonce=nonce, mode=AES.MODE_CCM)
+    #encrypting
+    ct, tag = cipher.encrypt(input_text)
+    ct = nonce+tag+ct
+    return ct,key
+    
 
 def decrypt():
     '''
@@ -125,22 +139,18 @@ def decrypt():
          default = 'ciphertext.txt',
          process = lambda raw: stirng_to_base64(raw)
     )
-
-    nonce, _ = read_file(
-         subject = 'nonce',
-         error = 'User aborted reading the ciphertext',
-         default = 'nonce.txt',
-         process = lambda raw: stirng_to_base64(raw)
-    )
     #extract the noncr from the ciphertext
-    print(f'lunghezza di nonce: {len(nonce)}')
+    nonce = ct[:CHACHA20_NONCE_LENGTH]
+    cifertext = ct[CHACHA20_NONCE_LENGTH:]
+    #initialize the ChaCha20 cifer
     cipher = ChaCha20.new(key=key, nonce=nonce)
-    pt = cipher.decrypt(ct)
+    pt = cipher.decrypt(cifertext)
+    #export the decrypted message
     pt_file = write_file(
-         data = byte_to_base64(pt),
+         data = pt,
          subject = 'decrypted text',
          error = 'User aborted writing the output',
-         default = f'decriptedtext.txt'
+         default = 'decriptedtext.txt'
     )
     print(f'Written files:\nCT: {pt_file}')
 
