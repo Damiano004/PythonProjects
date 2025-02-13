@@ -115,7 +115,7 @@ def encrypt():
     pt, _ = read_file(
          subject = 'plaintext',
          error = 'User aborted reading the plaintext',
-         default = 'plaintext.txt.txt',
+         default = 'plaintext.txt',
          process = lambda raw: raw
     )
 
