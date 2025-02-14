@@ -18,15 +18,15 @@ TAG_OFFSET = NONCE_OFFSET+TAG_LEN
 
 class InsecurePasswordError(Exception):
     '''
-    Error inserting a weak password.
+    Error due to a weak password.
     '''
 
 def find_in_password(psw: str, comparisonString:str, isNumbers: bool):
     '''
-    This functions looks into the input password and checks if there is at least
+    This function looks at the input password and checks if there is at least
     one character present in the comparisonString.
-    This is used to check if in the password there is at least a number and
-    a special character.
+    This is used to check if the password contains at least one number and 
+    one special character.
 
     ### Parameters
     - psw: the password to check
@@ -50,11 +50,11 @@ def find_in_password(psw: str, comparisonString:str, isNumbers: bool):
 
 def check_password(psw: str):
     '''
-    This is the function that actually checks the password, by checking if its
-    length is at least 8 and if it has at least one number and special character.
+    This function checks the password by verifying if its length is at least 8
+    and if it has at least one number and special character.
 
     ### Parameters
-    - psw: the password needed to be checked
+    - psw: The password to be checked.
 
     ---
     ## Raises
@@ -72,7 +72,7 @@ def check_password(psw: str):
 
 def insert_password() -> str:
     '''
-    Function that manages the password input.
+    Manages password input.
     Checks its strength with the function check_password().
 
     ### Returns
@@ -81,7 +81,7 @@ def insert_password() -> str:
     prompt = 'Please insert the password:\n'
     while True:
         try:
-            psw = input(prompt)
+            psw = getpass(prompt=prompt, stream='*')
             check_password(psw)
             return psw
         except(InsecurePasswordError) as err:
@@ -90,36 +90,44 @@ def insert_password() -> str:
 
 def get_key(psw: str, salt: str) -> bytes:
     '''
-    Function that retrives the key from password and salt
+    Retrieves the key from the password and salt.
 
     ### Parameters:
     - psw: the password input
     - salt: the salt needed to generate the key
 
     ### Returns
-    The key in bytes value
+    The key as a byte value
     '''
-    # It takes a few seconds, so i print a message to check if it's doing somehting
+    # It takes a few seconds, so I print a message to check if it's doing something.
     print('Generating key...')
     return scrypt(password=psw, salt=salt, key_len=KEY_LEN, N=2**20, r=8, p=1)
 
 def encrypt():
+    '''
+    Encrypts the message using the AES-OCB cipher.
+    '''
+    # getting the password
     psw = insert_password()
+    # retrieving key
     salt = get_random_bytes(SALT_LEN)
     key = get_key(salt=salt, psw=psw)
-
+    # asking for the plaintext to the user
     pt, _ = read_file(
          subject = 'plaintext',
          error = 'User aborted reading the plaintext',
          default = 'plaintext.bin',
          process = lambda raw: raw
     )
+    # initializing the nonce
     nonce = get_random_bytes(NONCE_LEN)
+    # initializing the AES cipher
     cipher = AES.new(key=key, nonce=nonce, mode=AES.MODE_OCB)
+    # encrypting the plaintext
     ciphertext, tag = cipher.encrypt_and_digest(pt)
-
+    # assembles the ciphertext message
     ct = salt+nonce+tag+ciphertext
-
+    # writing the message on bin file
     _ = write_file(
         data = ct,
         subject = 'ciphertext',
@@ -128,6 +136,9 @@ def encrypt():
     )
 
 def decrypt():
+    '''
+    Decrypts an encrypted message using AES-OCB mode.
+    '''
     # read ciphertext from file
     ct, _ = read_file(
         subject = 'ciphertext',
@@ -135,18 +146,21 @@ def decrypt():
         default = 'ciphertext.bin',
         process = lambda raw: check_len(data=raw, min_len=MIN_CT_LEN)
     )
-
     # ct = salt+nonce+tag+ciphertext
+    # getting password
     psw = insert_password()
-    key = get_key(psw=psw, salt=salt)
     salt = ct[:SALT_LEN]
+    # retrieving the key
+    key = get_key(psw=psw, salt=salt)
+    # separating the nonce and the tag from the ciphertext
     nonce = ct[SALT_LEN:NONCE_OFFSET]
     tag = ct[NONCE_OFFSET:TAG_OFFSET]
     ciphertext = ct[TAG_OFFSET:]
-
+    # initializing the cipher
     cipher = AES.new(key=key, nonce=nonce, mode=AES.MODE_OCB)
+    #decrypting message
     decipheredText = cipher.decrypt_and_verify(ciphertext, tag)
-
+    # writing decrypted text to file
     _ = write_file(
         data = decipheredText,
         subject = 'decrypted text',
@@ -154,7 +168,7 @@ def decrypt():
         default = 'decipheredText.bin'
     )
 
-# <----------------------- main -----------------------> #
+# <----------------------- Main -----------------------> #
 prompt = '''What do you want to do?
     1 -> encrypt
     2 -> decrypt
