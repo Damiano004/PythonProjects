@@ -84,9 +84,8 @@ def insert_password() -> str:
             psw = getpass(prompt=prompt, stream='*')
             check_password(psw)
             return psw
-        except(InsecurePasswordError) as err:
+        except InsecurePasswordError as err:
             print(err)
-    
 
 def get_key(psw: str, salt: str) -> bytes:
     '''
@@ -116,7 +115,7 @@ def encrypt():
     pt, _ = read_file(
          subject = 'plaintext',
          error = 'User aborted reading the plaintext',
-         default = 'plaintext.bin',
+         default = 'plaintext.txt',
          process = lambda raw: raw
     )
     # initializing the nonce
@@ -158,8 +157,13 @@ def decrypt():
     ciphertext = ct[TAG_OFFSET:]
     # initializing the cipher
     cipher = AES.new(key=key, nonce=nonce, mode=AES.MODE_OCB)
-    #decrypting message
-    decipheredText = cipher.decrypt_and_verify(ciphertext, tag)
+    try:
+        #decrypting message
+        decipheredText = cipher.decrypt_and_verify(ciphertext, tag)
+    except ValueError:
+        msg = "An error occurred during the decryption. This could be due to an "
+        msg += "incorrect password."
+        raise LibCryptoError(msg)
     # writing decrypted text to file
     _ = write_file(
         data = decipheredText,
@@ -189,5 +193,5 @@ while True:
             case _:
                 # default error message for wrong inputs
                 print('Invalid choice, please try again!')
-    except (LibCryptoError, ReadProcessingError) as err:
+    except LibCryptoError as err:
         print(err)
