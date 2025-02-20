@@ -21,33 +21,6 @@ class InsecurePasswordError(Exception):
     Error due to a weak password.
     '''
 
-def find_in_password(psw: str, comparisonString:str, isNumbers: bool):
-    '''
-    This function looks at the input password and checks if there is at least
-    one character present in the comparisonString.
-    This is used to check if the password contains at least one number and 
-    one special character.
-
-    ### Parameters
-    - psw: the password to check
-    - comparisonString: the string containing the special characters or the numbers
-    - isNumbers: a boolean that dictates whether we are checking for numbers or characters
-
-    ---
-    ## Raises
-    An InsecurePasswordError if the password requirements are not met
-    '''
-    for char in psw:
-        if char in comparisonString:
-            return
-    if isNumbers:
-        # if checking for numbers
-        msg = "Password needs at least one number"
-        raise InsecurePasswordError(msg)
-    # else checking for special characters
-    msg = "Password needs at least one special character (!$%?.&£)"
-    raise InsecurePasswordError(msg)
-
 def check_password(psw: str):
     '''
     This function checks the password by verifying if its length is at least 8
@@ -61,14 +34,15 @@ def check_password(psw: str):
     An InsecurePasswordError if the password requirements are not met
     '''
     # Initialize special characters and numbers
-    SPECIAL_CHARACTERS = '!$%?.&£'
-    NUMBERS = '1234567890'
+    DEFAULT_PSWS = ['password','12345678','qwertyui']
 
-    if(len(psw) < 8):
+    if len(psw) < 8:
         msg = "Password needs to be at least 8 characters long"
         raise InsecurePasswordError(msg)
-    find_in_password(psw=psw, comparisonString=SPECIAL_CHARACTERS, isNumbers=False)
-    find_in_password(psw=psw, comparisonString=NUMBERS, isNumbers=True)    
+    if psw in DEFAULT_PSWS:
+        msg = "Password can't be one of the default passwords (password, 12345678"
+        msg += ", qwertyui...)"
+        raise InsecurePasswordError(msg)
 
 def insert_password() -> str:
     '''
@@ -158,18 +132,20 @@ def decrypt():
     # initializing the cipher
     cipher = AES.new(key=key, nonce=nonce, mode=AES.MODE_OCB)
     try:
-        #decrypting message
+        # decrypting message
         decipheredText = cipher.decrypt_and_verify(ciphertext, tag)
-    except ValueError:
+    except (KeyError, ValueError) as err:
+        # catching eventual errors
         msg = "An error occurred during the decryption. This could be due to an "
-        msg += "incorrect password."
+        msg += "incorrect password or the file has been corrupted.\n"
+        msg += str(err)
         raise LibCryptoError(msg)
-    # writing decrypted text to file
+    # writing the decrypted text to file 
     _ = write_file(
         data = decipheredText,
         subject = 'decrypted text',
         error = 'User aborted writing the output',
-        default = 'decipheredText.bin'
+        default = 'decipheredText.txt'
     )
 
 # <----------------------- Main -----------------------> #
