@@ -1,0 +1,14 @@
+Salvare le chiavi private protette da passwrod.
+Import_key può generare un ValueError, se viene presentato devo far reinserire il file dall'utente,
+prova ad utilizzare il valore "process" in read_file.
+Nella creazione del "signer" si deve mettere sempre 'rfc8032'.
+Sign può sollevare un typeError se si inserisce la chiave pubblica invece che privata, invece che
+farlo sollevare si può controllare che sia una chiave privata con il metodo "hasPrivate()" alla
+lettura della chiave.
+La chiave deve essere un Ed25519 o un Ed448, da controllare sempre alla lettura della chiave.
+quindi all'import della chiave:
+    controllo se va bene l'import del file
+    controllo che sia privata
+    controllo che sia della tipologia giusta
+La stessa cosa va fatta anche nell'import della chiave pubblica, ma non serve il controllo che sia 
+effettuvamente pubblica
