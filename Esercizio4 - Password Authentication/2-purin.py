@@ -111,6 +111,10 @@ def encrypt():
 def decrypt():
     '''
     Decrypts an encrypted message using AES-OCB mode.
+    
+    ---
+    ## Raises
+    a LibCryptoError if the password is wrong or if the file has been corrupted
     '''
     # read ciphertext from file
     ct, _ = read_file(
