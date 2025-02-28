@@ -15,6 +15,7 @@
 -   Non catchare ValueError
 
 Bisognerà modificare la classe DSS_cls utilizzando pycryptodome.
-Bisogna inserire la PK della CA, trovata nell'altro file pubblicato su classroom
+DONE - Bisogna inserire la PK della CA, trovata nell'altro file pubblicato su classroom
 Derivare la classe corretta della chiave, dipendentemente dal algoritmo in uso
 La firma può essere vuota perché inizialmente non la avremo ma dovremo chiederlo alla CA
+Essendo che hanno bisogno di ECC, bisogna scegliere anche una curva specifica, quelle con Ed nel nome

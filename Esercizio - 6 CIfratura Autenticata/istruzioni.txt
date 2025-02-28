@@ -1,0 +1,5 @@
+Non si deve cifrare se il certificato non è valido.
+Per validare il certificato si dovrà inviare il cartificato creato nella cartella drive data dal prof.
+Come kdf, per diffie hellman, si può utilizzare la funzione di esempio, cambiando in caso la lunghezza della chiave.
+Chiave pubblica del certificato statica.
+Chiave privata per la cifratura effimera.
