@@ -4,17 +4,17 @@ from base64 import b64decode
 from binascii import Error as B64Error
 import json
 import sys
-from crypto_utils import LibCryptoErrorr, ReadProcessingError
+from crypto_utils import LibCryptoError, ReadProcessingError
 from crypto_utils import read_file, write_file, check_len
 
 # custom errors
 
-class KeyImportErrorr(LibCryptoErrorr):
+class KeyImportErrorr(LibCryptoError):
     '''
     Error importing a cryptographic key
     '''
 
-class VerificationFailure(LibCryptoErrorr):
+class VerificationFailure(LibCryptoError):
     '''
     Verification of a signature failed
     '''
@@ -80,7 +80,7 @@ class DSS_cls():
             err_msg = f'Error: security level "{level}" not recognized, '
             available = '", "'.join(self._SEC_LEVELS)
             err_msg += f'use one of: "{available}".'
-            raise LibCryptoErrorr(err_msg)
+            raise LibCryptoError(err_msg)
 
     ##
     # instance variable
@@ -602,7 +602,7 @@ def sign_cert(ca_dss: DSS_cls) -> None:
     print('\nConfirm and sign?')
     c = input('(y to proceed, anything else to cancel): ')
     if c.lower() != 'y':
-        raise LibCryptoErrorr(error)
+        raise LibCryptoError(error)
     # complete the certificate
     cert.complete(ca_dss)
     # write complete certificate, default overwrites old cert
@@ -732,5 +732,5 @@ def dss_script(dss: DSS_cls) -> None:
                     verify_cert(dss)
             elif choice == '0':
                 sys.exit()
-        except LibCryptoErrorr as e:
+        except LibCryptoError as e:
                 print(e)
