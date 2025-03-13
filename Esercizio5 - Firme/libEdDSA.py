@@ -19,7 +19,7 @@ class EdDSA_DSS(DSS_cls):
     DEFAULT_SK = 'eddsa_sk.pem'
     # define bit sizes for different security levels
     _SEC_LEVELS = {
-        'medium': ['Ed25519', 'Ed25519'],
+        'medium': ['Ed25519', 'Ed448'],
         'high': ['Ed448']
     }
     # define CA's PK
@@ -81,9 +81,9 @@ class EdDSA_DSS(DSS_cls):
         export_settings = {
             'format': 'PEM',
             'passphrase': passphrase,
-            'protection': 'PBKDF2WithHMAC-SHA1AndAES256-CBC',
+            'protection': 'scryptAndAES128-GCM',
             'prot_params': {
-                'iteration_count': 210000
+                'iteration_count': 2**20
             }
         }
         # explicitly encode to bytes
