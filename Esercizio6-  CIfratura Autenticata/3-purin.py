@@ -45,31 +45,23 @@ def kdf(x):
         return SHAKE128.new(x).read(32)
 
 def encrypt():
-    #  # read certificate to sign
-    # settings = {
-    #     'subject': '"certificate to sign"',
-    #     'error': 'Signing aborted.',
-    #     'process': import_cert
-    # }
-    # cert: Certificate
-    # cert, _ = read_file(**settings)
+    # read certificate to sign
+    settings = {
+        'subject': '"certificate"',
+        'error': 'aborted.',
+        'process': import_cert
+    }
+    cert: Certificate
+    cert, _ = read_file(**settings)
 
     dss = EdDSA_DSS()
-    # settings = {
-    #     'subject': '"private key"',
-    #     'error': 'Signing aborted.'
-    # }
-    # privateKey, _ = read_file(**settings)
-    # passphrase = get_passphrase()
-    # dss: EdDSA_DSS = dss.key_import(privateKey,passphrase)
     dss = read_key(True,dss)
     dss2 = EdDSA_DSS()
-    dss2 = read_key(False,dss2)
+    dss2 = import_key(cert.public_key.encode(),False,dss2)
     print(dss2._key)
     session_key = key_agreement(static_priv=dss._key, static_pub=dss2._key, kdf=kdf)
+    print(session_key)
     
-    
-    #da qui
     settings = {
         'subject': '"plaintext"',
         'error': 'reading aborted.'
@@ -88,5 +80,14 @@ def encrypt():
     out_file = write_file(**settings)
     print("File written in "+out_file)
 
-# gen_keys()
-encrypt()
+def decrypt():
+    settings = {
+        'subject': '"ciphertext"',
+        'error': 'reading aborted.'
+    }
+    ct = read_file(**settings)
+    tag = ct[:TAG_LENGTH]
+    nonce = ct[TAG_LENGTH:TAG_LENGTH+NONCE_LEN]
+    ciphertext = ct[TAG_LENGTH+NONCE_LEN:]
+
+    cipher = AES.new(nonce=nonce, mode=AES.MODE_GCM)
