@@ -66,7 +66,7 @@ def encrypt():
         'subject': '"plaintext"',
         'error': 'reading aborted.'
     }
-    pt = read_file(**settings)
+    pt, _ = read_file(**settings)
     nonce = get_random_bytes(NONCE_LEN)
     cipher = AES.new(session_key,nonce=nonce, mode=AES.MODE_GCM)
     ct, tag = cipher.encrypt_and_digest(pt)
@@ -85,9 +85,40 @@ def decrypt():
         'subject': '"ciphertext"',
         'error': 'reading aborted.'
     }
-    ct = read_file(**settings)
+    ct, _ = read_file(**settings)
     tag = ct[:TAG_LENGTH]
     nonce = ct[TAG_LENGTH:TAG_LENGTH+NONCE_LEN]
     ciphertext = ct[TAG_LENGTH+NONCE_LEN:]
+    settings = {
+        'subject': '"certificate"',
+        'error': 'aborted.',
+        'process': import_cert
+    }
+    cert: Certificate
+    cert, _ = read_file(**settings)
 
-    cipher = AES.new(nonce=nonce, mode=AES.MODE_GCM)
+    dss = EdDSA_DSS()
+    dss = read_key(True,dss)
+    dss2 = EdDSA_DSS()
+    dss2 = import_key(cert.public_key.encode(),False,dss2)
+    print(dss2._key)
+    session_key = key_agreement(static_priv=dss._key, static_pub=dss2._key, kdf=kdf)
+    print('nonce:')
+    print(nonce)
+    print('tag:')
+    print(tag)
+    print('ct:')
+    print(ciphertext)
+    cipher = AES.new(key=session_key,nonce=nonce, mode=AES.MODE_GCM)
+
+    plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+    settings = {
+        'data' : plaintext,
+        'subject' : 'plaintext',
+        'error' : 'User aborted writing the output',
+        'default' : 'plaintext.txt'
+    }
+    write_file(**settings)
+
+encrypt()
+decrypt()
