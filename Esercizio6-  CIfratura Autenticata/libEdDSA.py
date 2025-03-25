@@ -5,7 +5,7 @@
 from base64 import b64encode
 from Crypto.Signature import eddsa
 from Crypto.PublicKey import ECC
-from lib_DSS import LibCryptoError, KeyImportErrorr
+from lib_DSS import LibCryptoError, KeyImportError
 from lib_DSS import VerificationFailure, DSS_cls
 from lib_DSS import dss_script
 
@@ -17,7 +17,7 @@ class EdDSA_DSS(DSS_cls):
     ALGORTIHM = 'EdDSA'
     DEFAULT_PK = 'eddsa_pk.pem'
     DEFAULT_SK = 'eddsa_sk.pem'
-    # define bit sizes for different security levels
+    # define parameters for different security levels
     _SEC_LEVELS = {
         'medium': ['Ed25519', 'Ed448'],
         'high': ['Ed448']
@@ -33,7 +33,7 @@ class EdDSA_DSS(DSS_cls):
         try:
             self._key = ECC.import_key(encoding, passphrase)
         except ValueError as e:
-            raise KeyImportErrorr(e) from e
+            raise KeyImportError(e) from e
     
     def check_security(self, level: str = 'medium') -> str:
         # check that a key has been set
@@ -52,7 +52,7 @@ class EdDSA_DSS(DSS_cls):
             warning += f' does not provide a {level} level of '
             warning += 'security, the smallest curve is '
             warning += f'{ok_curves[0]}'
-        # return waring message
+        # return warning message
         return warning
     
     def is_secret(self) -> bool:
@@ -67,7 +67,7 @@ class EdDSA_DSS(DSS_cls):
         self._check_level(sec_level)
         # generate new keypair with proper parameters
         self._key = ECC.generate(
-            curve    = self._SEC_LEVELS[sec_level][0]
+            curve = self._SEC_LEVELS[sec_level][0]
         )
     
     def export_secret(self, passphrase: str) -> bytes:
@@ -100,8 +100,7 @@ class EdDSA_DSS(DSS_cls):
             format = 'PEM'
         ).encode()
     
-    def sign(self,
-            data: bytes, encode: bool = False) -> bytes | str:
+    def sign(self, data: bytes, encode: bool = False) -> bytes | str:
         if not self.is_secret():
             raise LibCryptoError('Error: no secret key set')
         # initialise signing
@@ -113,8 +112,7 @@ class EdDSA_DSS(DSS_cls):
             sig = b64encode(sig).decode('utf-8')
         return sig
     
-    def verify(self,
-            data: bytes, sig: bytes) -> bytes | str:
+    def verify(self, data: bytes, sig: bytes) -> None:
         if self._key is None:
             raise LibCryptoError('Error: no key set')
         # initialise verifying

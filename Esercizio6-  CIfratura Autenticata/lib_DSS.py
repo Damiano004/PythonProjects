@@ -9,7 +9,7 @@ from crypto_utils import read_file, write_file, check_len
 
 # custom errors
 
-class KeyImportErrorr(LibCryptoError):
+class KeyImportError(LibCryptoError):
     '''
     Error importing a cryptographic key
     '''
@@ -270,7 +270,7 @@ def import_key(
     # import key
     try:
         dss.key_import(data, passphrase)
-    except KeyImportErrorr as e:
+    except KeyImportError as e:
         # error message
         message = 'Error while importing the key: ' + str(e)
         if is_private:
