@@ -137,14 +137,15 @@ def decrypt() -> None:
     try:
         # ask the user for the private key
         priv_key = read_key(True,EdDSA_DSS())
+        pub_key = import_key(pub_key,False,EdDSA_DSS())
         # create the session key
-        session_key = key_agreement(eph_pub=pub_key,static_priv=priv_key,kdf=kdf)
+        session_key = key_agreement(eph_pub=pub_key._key,static_priv=priv_key._key,kdf=kdf)
         # initialize the cipher
         cipher = AES.new(key=session_key,mode=AES.MODE_OCB, nonce=nonce)
         # decrypt the ciphertext
         plaintext = cipher.decrypt_and_verify(ciphertext, tag)
-    except ValueError:
-        raise LibCryptoError('Error while executing the decryption.')
+    except ValueError as err:
+        raise LibCryptoError('Error while executing the decryption.\n'+ str(err))
     
     settings = {
         'data' : plaintext,
