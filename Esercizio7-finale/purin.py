@@ -1,16 +1,12 @@
-# Completare e commentare opportunamente il codice seguente
-
-# importare i moduli crittografici
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import BLAKE2b
 from Crypto.Cipher import AES
-# importare una funzione di input
 from getpass import getpass
 import json
 import os.path
 
-def process_pwd(password, salt):
+def process_pwd(password: str, salt: bytes) -> bytes:
     '''
     Function that uses a KDF to create a secure key
 
@@ -24,7 +20,7 @@ def process_pwd(password, salt):
     key = scrypt(password, salt, 16, N=2**20, r=8, p=1)
     return key 
 
-def load_data(path, password):
+def load_data(path: str, password: str) -> str:
     '''
     Function that decrypts the credentials found in the given path
 
@@ -62,7 +58,7 @@ def load_data(path, password):
         raise IOError(f'data not valid: {str(err)}')
     return credentials
 
-def save_and_exit(path, password, credentials):
+def save_and_exit(path: str, password: str, credentials: dict) -> None:
     '''
     Funciton that encrypts and saves some new credenntials
 
@@ -88,7 +84,7 @@ def save_and_exit(path, password, credentials):
         out_file.write(ciphertext)
 
 
-def search_and_add(query, dic):
+def search_and_add(query: str, dic: dict) -> dict:
     '''
     Search some credentials under a given query, if none is found may add new ones under that query
 
@@ -121,7 +117,7 @@ def search_and_add(query, dic):
     return dic
 
 
-def log_in(username, password):
+def log_in(username: str, password: str) -> None:
     '''
     Function that performs the login of the user to the app
 
@@ -179,7 +175,7 @@ def log_in(username, password):
                 print('Error while saving, new data has not been updated!')
             return
 
-#MAIN
+# --------------------- MAIN --------------------- 
 while True:
     print('Insert username and password to load data,')
     print('leave blank and press "enter" to exit.')
